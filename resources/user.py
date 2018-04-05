@@ -3,7 +3,7 @@ from os import urandom
 from binascii import hexlify
 from hashlib import sha512, sha256
 
-from flask_restful import Resource, marshal_with, fields, reqparse
+from flask_restful import Resource, reqparse
 
 from models import db, User
 from common.util import RedisDict
@@ -12,14 +12,16 @@ from common.util import RedisDict
 r = RedisDict()
 mail_validator = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 
-retrieve_user = reqparse.RequestParser()
-retrieve_user.add_argument('username', required=True)
-
 
 class UserREST(Resource):
 
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('username', required=True)
+        super(UserREST, self).__init__()
+
     def post(self):
-        args = retrieve_user.parse_args()
+        args = self.reqparse.parse_args()
         if len(args['username']) > 60:
             return {'error': 'invalid_username'}, 400
         user = User.query.filter_by(username=args['username']).first()
@@ -28,16 +30,17 @@ class UserREST(Resource):
         return {'error': 'no_user'}, 400
 
 
-register_user = reqparse.RequestParser()
-register_user.add_argument('username', required=True)
-register_user.add_argument('user_mail', required=True)
-register_user.add_argument('pwd', required=True)
-
-
 class UserRegisterREST(Resource):
 
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('username', required=True)
+        self.reqparse.add_argument('user_mail', required=True)
+        self.reqparse.add_argument('pwd', required=True)
+        super(UserRegisterREST, self).__init__()
+
     def put(self):
-        args = register_user.parse_args()
+        args = self.reqparse.parse_args()
         username, user_mail, pwd_hash = args['username'], args['user_mail'], args['pwd']
         if len(username) > 60:
             return {'error': 'invalid_username'}, 400
@@ -53,16 +56,17 @@ class UserRegisterREST(Resource):
         return {'status': 'created'}, 201
 
 
-authorize_user = reqparse.RequestParser()
-authorize_user.add_argument('username', required=True)
-authorize_user.add_argument('pwd', required=True)
-authorize_user.add_argument('salt', required=True)
-
-
 class UserAuthorizationREST(Resource):
 
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('username', required=True)
+        self.reqparse.add_argument('pwd', required=True)
+        self.reqparse.add_argument('salt', required=True)
+        super(UserAuthorizationREST, self).__init__()
+
     def post(self):
-        args = authorize_user.parse_args()
+        args = self.reqparse.parse_args()
         username, pwd_hash, salt = args['username'], args['pwd'], args['salt']
         if len(username) > 60:
             return {'error': 'no_user'}, 400
@@ -77,14 +81,15 @@ class UserAuthorizationREST(Resource):
             return {'token': token}, 200
 
 
-refresh_token = reqparse.RequestParser()
-refresh_token.add_argument('token', required=True)
-
-
 class UserTokenAuthorizeREST(Resource):
 
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('token', required=True)
+        super(UserTokenAuthorizeREST, self).__init__()
+
     def post(self):
-        args = refresh_token.parse_args()
+        args = self.reqparse.parse_args()
         if args['token'] in r:
             username = r[args['token']]
             token = sha256(f'{username}:{hexlify(urandom(16)).decode()}'.encode()).hexdigest()
