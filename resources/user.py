@@ -5,7 +5,7 @@ from hashlib import sha512
 
 from flask_restful import Resource
 
-from app import db
+from models import db
 from models.user import User
 from common.util import RedisDict
 
@@ -17,10 +17,12 @@ mail_validator = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)
 class UserREST(Resource):
 
     def get(self, username):
+        print('UserREST', username)
         if len(username) > 60:
             return {'error': 'invalid_username'}, 400
-        if User.query.filter_by(username=username).first():
-            return {'user': username}, 200
+        user = User.query.filter_by(username=username).first()
+        if user:
+            return {'user': user.username, 'mail': user.email}, 200
         return {'error': 'no_user'}, 400
 
 
@@ -55,6 +57,7 @@ class UserAuthorizationREST(Resource):
             r[token] = user.username
             r.expire(token, 259200)
             return {'token': token}, 200
+
 
 
 class UserTokenAuthorizeREST(Resource):

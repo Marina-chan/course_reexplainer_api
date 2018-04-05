@@ -1,7 +1,7 @@
 from flask_restful import Resource
 
 
-class RatingsREST(Resource):
+class RatingREST(Resource):
 
     def put(self):
         pass

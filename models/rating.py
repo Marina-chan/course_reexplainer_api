@@ -1,10 +1,9 @@
-from app import db
-
+from models import db
 from models.user import User
 from models.regex import Regex
 
 
-class Ratings(db.Model):
+class Rating(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.ForeignKey(User.id), nullable=False)
     user = db.relationship('User', backref=db.backref('rates', lazy=True))
