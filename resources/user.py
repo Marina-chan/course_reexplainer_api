@@ -1,7 +1,7 @@
 import re
 from os import urandom
 from binascii import hexlify
-from hashlib import sha512
+from hashlib import sha512, sha256
 
 from flask_restful import Resource, marshal_with, fields, reqparse
 
@@ -31,14 +31,14 @@ class UserREST(Resource):
 register_user = reqparse.RequestParser()
 register_user.add_argument('username', required=True)
 register_user.add_argument('user_mail', required=True)
-register_user.add_argument('pwd_hash', required=True)
+register_user.add_argument('pwd', required=True)
 
 
 class UserRegisterREST(Resource):
 
     def put(self):
         args = register_user.parse_args()
-        username, user_mail, pwd_hash = args['username'], args['user_mail'], args['pwd_hash']
+        username, user_mail, pwd_hash = args['username'], args['user_mail'], args['pwd']
         if len(username) > 60:
             return {'error': 'invalid_username'}, 400
         if len(user_mail) > 140 or not mail_validator.match(user_mail):
@@ -55,7 +55,7 @@ class UserRegisterREST(Resource):
 
 authorize_user = reqparse.RequestParser()
 authorize_user.add_argument('username', required=True)
-authorize_user.add_argument('pwd_hash', required=True)
+authorize_user.add_argument('pwd', required=True)
 authorize_user.add_argument('salt', required=True)
 
 
@@ -63,7 +63,7 @@ class UserAuthorizationREST(Resource):
 
     def post(self):
         args = authorize_user.parse_args()
-        username, pwd_hash, salt = args['username'], args['pwd_hash'], args['salt']
+        username, pwd_hash, salt = args['username'], args['pwd'], args['salt']
         if len(username) > 60:
             return {'error': 'no_user'}, 400
         user = User.query.filter_by(username=username).first()
@@ -71,7 +71,7 @@ class UserAuthorizationREST(Resource):
             return {'error': 'no_user'}, 400
         pwd = sha512(f'{user.password}:{salt}'.encode()).hexdigest()
         if pwd == pwd_hash:
-            token = sha512(f'{user.username}:{hexlify(urandom(16)).decode()}'.encode()).hexdigest()
+            token = sha256(f'{user.username}:{hexlify(urandom(16)).decode()}'.encode()).hexdigest()
             r[token] = user.username
             r.expire(token, 259200)
             return {'token': token}, 200
@@ -87,7 +87,7 @@ class UserTokenAuthorizeREST(Resource):
         args = refresh_token.parse_args()
         if args['token'] in r:
             username = r[args['token']]
-            token = sha512(f'{username}:{hexlify(urandom(16)).decode()}'.encode()).hexdigest()
+            token = sha256(f'{username}:{hexlify(urandom(16)).decode()}'.encode()).hexdigest()
             r[token] = username
             r.expire(token, 259200)
             return {'token': token}, 200
