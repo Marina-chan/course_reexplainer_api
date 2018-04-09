@@ -3,11 +3,9 @@ from flask_restful import Resource
 
 class RatingREST(Resource):
 
-    def put(self):
+    def get(self, token, id):
         pass
 
-    def post(self):
-        pass
 
-    def get(self):
-        pass
+class RatingChangeREST(Resource):
+    pass

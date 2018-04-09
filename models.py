@@ -18,7 +18,7 @@ class User(db.Model):
 
 class Regex(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    expression = db.Column(db.Unicode(512), nullable=False, unique=True)
+    expression = db.Column(db.Unicode(255), nullable=False, unique=True)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.ForeignKey(User.id), nullable=False)
 

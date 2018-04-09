@@ -14,16 +14,10 @@ mail_validator = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)
 
 class UserREST(Resource):
 
-    def __init__(self):
-        self.reqparse = reqparse.RequestParser(bundle_errors=True)
-        self.reqparse.add_argument('id', type=int, required=True)
-        super(UserREST, self).__init__()
-
-    def post(self):
-        args = self.reqparse.parse_args()
-        if 'id' not in args:
+    def get(self, user_id):
+        if not user_id:
             return {'error': 'no_user_id'}, 404
-        user = User.query.filter_by(id=args['id']).first()
+        user = User.query.filter_by(id=user_id).first()
         if user:
             return {'user': user.username}, 200
         return {'error': 'no_user'}, 404

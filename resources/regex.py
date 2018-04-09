@@ -3,11 +3,12 @@ from flask_restful import Resource
 
 class RegexREST(Resource):
 
-    def post(self):
-        return {}
+    def get(self, token, id):
+        pass
 
-    def get(self):
-        return {}
+    def delete(self, token, id):
+        pass
 
-    def put(self):
-        return {}
+
+class RegexCreateREST(Resource):
+    pass

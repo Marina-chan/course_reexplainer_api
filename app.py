@@ -15,7 +15,8 @@ db.init_app(app)
 
 api = Api(app)
 
-api.add_resource(UserREST, '/users')
+
+api.add_resource(UserREST, '/users/<int:user_id>')
 api.add_resource(UserRegisterREST, '/users/register')
 api.add_resource(UserAuthorizationREST, '/users/authorize')
 api.add_resource(UserTokenAuthorizeREST, '/users/refreshtoken')
