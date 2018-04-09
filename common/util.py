@@ -18,6 +18,10 @@ class RedisDict:
     def __contains__(self, item):
         return True if self[item] else False
 
+    def __iter__(self):
+        for key in self.__db.keys():
+            yield key.decode()
+
     def expire(self, key, time):
         self.__db.expire(key, time)
 

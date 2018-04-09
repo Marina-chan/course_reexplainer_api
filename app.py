@@ -19,7 +19,7 @@ api = Api(app)
 api.add_resource(UserREST, '/users')
 api.add_resource(UserRegisterREST, '/users/register')
 api.add_resource(UserAuthorizationREST, '/users/authorize')
-api.add_resource(UserTokenAuthorizeREST, '/users/refreshtoken')
+api.add_resource(UserTokenAuthorizeREST, '/users/refresh_token')
 
 if __name__ == '__main__':
     app.run(debug=True)
