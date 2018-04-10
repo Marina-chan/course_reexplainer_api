@@ -1,7 +1,10 @@
 import re
+import sqlite3
 from hashlib import sha512
 from secrets import token_urlsafe
 
+import sqlalchemy.exc
+from flask import abort
 from flask_restful import Resource, reqparse
 
 from models import db, User
@@ -24,13 +27,9 @@ class UserREST(Resource):
         args = self.reqparse.parse_args()
         token, user_id = args['token'], args['id']
         if token not in r:
-            return {'error': 'Not authorized'}, 408
-        if not user_id:
-            return {'error': 'There is no user with such id'}, 404
-        user = User.query.filter_by(id=user_id).first()
-        if user:
-            return {'user': user.username}, 200
-        return {'error': 'No user'}, 404
+            return {'error': 'Not authorized'}, 401
+        user = User.query.get_or_404(user_id)
+        return {'user': user.username}, 200
 
 
 class UserRegisterREST(Resource):
@@ -45,18 +44,13 @@ class UserRegisterREST(Resource):
     def post(self):
         args = self.reqparse.parse_args()
         username, user_mail, pwd_hash = args['username'], args['user_mail'], args['pwd']
-        if len(username) > 60:
-            return {'error': 'Invalid username'}, 400
-        if len(user_mail) > 140 or not mail_validator.match(user_mail):
-            return {'error': 'Invalid mail'}, 400
-        if User.query.filter_by(username=username).first():
-            return {'error': 'User already exists'}, 400
-        if User.query.filter_by(email=user_mail).first():
-            return {'error': 'Mail already in use'}, 400
         user = User(username=username, email=user_mail, password=pwd_hash)
-        db.session.add(user)
-        db.session.commit()
-        return {'user_id': User.query.filter_by(username=username).first().id}, 201
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except (sqlite3.IntegrityError, sqlalchemy.exc.IntegrityError):
+            abort(404)
+        return {'user_id': user.id}, 201
 
 
 class UserAuthorizationREST(Resource):
@@ -71,14 +65,10 @@ class UserAuthorizationREST(Resource):
     def post(self):
         args = self.reqparse.parse_args()
         username, pwd_hash, salt = args['username'], args['pwd'], args['salt']
-        if len(username) > 60:
-            return {'error': 'No user'}, 400
-        user = User.query.filter_by(username=username).first()
-        if not user:
-            return {'error': 'No user'}, 400
+        user = User.query.filter_by(username=username).first_or_404()
         for key in r:
             if r[key] == username:
-                return {'error': 'User already authorized'}
+                return {'error': 'User already authorized'}, 403
         pwd = sha512(f'{user.password}:{salt}'.encode()).hexdigest()
         if pwd == pwd_hash:
             token = token_urlsafe(32)
@@ -106,4 +96,4 @@ class UserTokenAuthorizeREST(Resource):
             r[token] = username
             r.expire(token, 259200)
             return {'token': token}, 200
-        return {'error': 'Not authorized'}, 408
+        return {'error': 'Not authorized'}, 401

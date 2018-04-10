@@ -3,10 +3,16 @@ from flask_restful import Resource, reqparse
 
 class RegexREST(Resource):
 
-    def get(self, token, id):
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
+        self.reqparse.add_argument('regex_id', type=int, required=True)
+        super(RegexREST, self).__init__()
+
+    def get(self):
         pass
 
-    def delete(self, token, id):
+    def delete(self):
         pass
 
 
