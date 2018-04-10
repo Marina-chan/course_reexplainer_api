@@ -1,4 +1,14 @@
+import sqlite3
+
+import sqlalchemy.exc
+from flask import abort
 from flask_restful import Resource, reqparse
+
+from models import db, User, Regex
+from common.util import RedisDict
+
+
+r = RedisDict()
 
 
 class RegexREST(Resource):
@@ -10,7 +20,18 @@ class RegexREST(Resource):
         super(RegexREST, self).__init__()
 
     def get(self):
-        pass
+        args = self.reqparse.parse_args()
+        token, regex_id = args['token'], args['regex_id']
+        if token not in r:
+            abort(404)
+        re = Regex.query.get_or_404(regex_id)
+        user = User.query.get_or_404(re.author_id)
+        return {
+            'id': re.id,
+            'expression': re.expression,
+            'explanation': None,
+            'author': user.username
+        }
 
     def delete(self):
         pass
@@ -27,10 +48,19 @@ class RegexCreateREST(Resource):
 
     def post(self):
         args = self.reqparse.parse_args()
-        expression, user_id = args['expression'], args['user_id']
+        token, expression, user_id = args['token'], args['expression'], args['user_id']
+        if token not in r:
+            abort(404)
+        user = User.query.get_or_404(user_id)
+        re = Regex(expression=expression, author_id=user.id)
+        try:
+            db.session.add(re)
+            db.session.commit()
+        except (sqlite3.IntegrityError, sqlalchemy.exc.IntegrityError):
+            abort(404)
+        # TODO: re_explain <- write semi-normal code for generating explanation for given regex
         return {
-            'id': 0,
+            'id': re.id,
             'expression': expression,
-            'explanation': None,
-            'rating': 0
+            'explanation': None
         }, 200

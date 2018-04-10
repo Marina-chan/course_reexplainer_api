@@ -1,5 +1,6 @@
 import re
 import sqlite3
+from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
 
@@ -73,7 +74,7 @@ class UserAuthorizationREST(Resource):
         if pwd == pwd_hash:
             token = token_urlsafe(32)
             r[token] = user.username
-            r.expire(token, 259200)
+            r.expire(token, timedelta(days=3).total_seconds())
             return {
                        'token': token,
                        'user_id': user.id,
@@ -94,6 +95,6 @@ class UserTokenAuthorizeREST(Resource):
             username = r[args['token']]
             token = token_urlsafe(32)
             r[token] = username
-            r.expire(token, 259200)
+            r.expire(token, timedelta(days=3).total_seconds())
             return {'token': token}, 200
         return {'error': 'Not authorized'}, 401
