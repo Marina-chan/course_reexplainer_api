@@ -73,7 +73,7 @@ class UserAuthorizationREST(Resource):
         pwd = sha512(f'{user.password}:{salt}'.encode()).hexdigest()
         if pwd == pwd_hash:
             token = token_urlsafe(32)
-            r[token] = user.username
+            r[token] = user.id
             r.expire(token, timedelta(days=3).total_seconds())
             return {
                        'token': token,
@@ -92,9 +92,10 @@ class UserTokenAuthorizeREST(Resource):
     def post(self):
         args = self.reqparse.parse_args()
         if args['token'] in r:
-            username = r[args['token']]
+            user_id = r[args['token']]
             token = token_urlsafe(32)
-            r[token] = username
+            r.pop(args['token'])
+            r[token] = user_id
             r.expire(token, timedelta(days=3).total_seconds())
             return {'token': token}, 200
         return {'error': 'Not authorized'}, 401

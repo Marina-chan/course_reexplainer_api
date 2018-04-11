@@ -1,3 +1,5 @@
+import re
+
 import redis
 
 
@@ -27,3 +29,12 @@ class RedisDict:
 
     def pop(self, key):
         return self.__db.delete(key)
+
+
+class ReExplain:
+
+    def __init__(self, expression):
+        self.expression = expression
+
+    def __call__(self):
+        pass
