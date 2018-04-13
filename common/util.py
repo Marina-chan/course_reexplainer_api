@@ -17,6 +17,9 @@ class RedisDict:
     def __getitem__(self, key):
         return self.__db.get(key).decode()
 
+    def set(self, key, value):
+        self.__db.set(key, value)
+
     def __contains__(self, item):
         return True if self[item] else False
 

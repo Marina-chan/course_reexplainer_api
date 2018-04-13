@@ -64,12 +64,12 @@ class RegexChangeREST(Resource):
             re.expression = expression
             re.explanation = ReExplain(expression)()
             db.session.commit()
-            return {
-                'id': re.id,
-                'expression': re.expression,
-                'explanation': re.explanation,
-                'author': u.username
-            }, 200
+        return {
+            'id': re.id,
+            'expression': re.expression,
+            'explanation': re.explanation,
+            'author': u.username
+        }, 200
 
 
 class RegexDeleteREST(Resource):
@@ -121,3 +121,28 @@ class RegexCreateREST(Resource):
             'expression': expression,
             'explanation': explanation()
         }, 200
+
+
+class RegexAuthorPostsREST(Resource):
+
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('token', required=True)
+        self.reqparse.add_argument('limit_by', required=False, store_missing=True, default=20)
+        self.reqparse.add_argument('author_id', type=int, required=True)
+        super(RegexAuthorPostsREST, self).__init__()
+
+    def get(self):
+        pass
+
+
+class RegexPostsREST(Resource):
+
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('token', required=True)
+        self.reqparse.add_argument('limit_by', required=False, store_missing=True, default=20)
+        super(RegexPostsREST, self).__init__()
+
+    def get(self):
+        pass

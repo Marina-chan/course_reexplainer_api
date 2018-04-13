@@ -45,6 +45,8 @@ class UserRegisterREST(Resource):
     def post(self):
         args = self.reqparse.parse_args()
         username, user_mail, pwd_hash = args['username'], args['user_mail'], args['pwd']
+        if not mail_validator.match(user_mail):
+            abort(400)
         user = User(username=username, email=user_mail, password=pwd_hash)
         try:
             db.session.add(user)

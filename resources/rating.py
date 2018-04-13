@@ -27,6 +27,7 @@ class RatingChangeREST(Resource):
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         super(RatingChangeREST, self).__init__()
 
     def put(self):

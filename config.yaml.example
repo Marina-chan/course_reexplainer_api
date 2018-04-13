@@ -1,4 +1,4 @@
 ---
 # If you want to generate secret with python use:
 # from os import urandom; from binascii import hexlify; print(hexlify(urandom(24)).decode())
-SECRET_KEY: "Somethnig"
+SECRET_KEY: "Something"
