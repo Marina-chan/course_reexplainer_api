@@ -78,10 +78,10 @@ class UserAuthorizationREST(Resource):
             r[token] = user.id
             r.expire(token, timedelta(days=3).total_seconds())
             return {
-                       'token': token,
-                       'user_id': user.id,
-                       'username': user.username
-                   }, 200
+                'token': token,
+                'user_id': user.id,
+                'username': user.username
+            }, 200
 
 
 class UserTokenAuthorizeREST(Resource):

@@ -53,12 +53,6 @@ class RegexChangeREST(Resource):
         expr_search = Regex.query.filter_by(expression=expression).first()
         if expr_search:
             u = User.query.get_or_404(expr_search.author_id)
-            return {
-                'id': re.id,
-                'expression': re.expression,
-                'explanation': re.explanation,
-                'author': u.username
-            }, 200
         else:
             u = User.query.get_or_404(user_id)
             re.expression = expression
@@ -128,12 +122,16 @@ class RegexAuthorPostsREST(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('token', required=True)
-        self.reqparse.add_argument('limit_by', required=False, store_missing=True, default=20)
+        self.reqparse.add_argument('limit_by', type=int, required=False, store_missing=True, default=20)
+        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=1)
         self.reqparse.add_argument('author_id', type=int, required=True)
         super(RegexAuthorPostsREST, self).__init__()
 
     def get(self):
-        pass
+        args = self.reqparse.parse_args()
+        token, limit_by, offset, author_id = args['token'], args['limit_by'], args['offset'], args['author_id']
+        u = User.query.get_or_404(author_id)
+        posts = u.created_posts
 
 
 class RegexPostsREST(Resource):
@@ -142,7 +140,26 @@ class RegexPostsREST(Resource):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('limit_by', required=False, store_missing=True, default=20)
+        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=1)
         super(RegexPostsREST, self).__init__()
 
     def get(self):
         pass
+
+
+class RegexSearchREST(Resource):
+
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('token', required=True)
+        self.reqparse.add_argument('regex', required=True)
+        super(RegexSearchREST, self).__init__()
+
+    def post(self):
+        args = self.reqparse.parse_args()
+        token, regex = args['token'], args['regex']
+        if token not in r:
+            abort(404)
+        posts = Regex.query.filter(Regex.expression.like(f'{regex}%')).all()
+
+        return [post.to_dict() for post in posts]
