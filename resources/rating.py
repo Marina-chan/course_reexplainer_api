@@ -29,7 +29,7 @@ class RatingPostsREST(Resource):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('limit_by', type=int, required=False, store_missing=True, default=20)
-        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=1)
+        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
         super(RatingPostsREST, self).__init__()
 
     def get(self):

@@ -15,7 +15,10 @@ class RedisDict:
         self.__db.set(key, value)
 
     def __getitem__(self, key):
-        return self.__db.get(key).decode()
+        k = self.__db.get(key)
+        if k:
+            return k.decode()
+        return k
 
     def set(self, key, value):
         self.__db.set(key, value)
@@ -25,7 +28,9 @@ class RedisDict:
 
     def __iter__(self):
         for key in self.__db.keys():
-            yield key.decode()
+            if key:
+                yield key.decode()
+            yield key
 
     def expire(self, key, time):
         self.__db.expire(key, time)

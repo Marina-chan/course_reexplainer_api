@@ -1,10 +1,13 @@
-import sqlite3
+from decimal import Decimal
+from itertools import islice
 
 import sqlalchemy.exc
 from flask import abort
+from psycopg2 import IntegrityError
 from flask_restful import Resource, reqparse
+from sqlalchemy.sql.functions import func
 
-from models import db, User, Regex
+from models import db, User, Regex, Rating
 from common.util import RedisDict, ReExplain
 
 
@@ -108,7 +111,7 @@ class RegexCreateREST(Resource):
         try:
             db.session.add(re)
             db.session.commit()
-        except (sqlite3.IntegrityError, sqlalchemy.exc.IntegrityError):
+        except (IntegrityError, sqlalchemy.exc.IntegrityError):
             abort(404)
         return {
             'id': re.id,
@@ -123,15 +126,18 @@ class RegexAuthorPostsREST(Resource):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('limit_by', type=int, required=False, store_missing=True, default=20)
-        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=1)
+        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
         self.reqparse.add_argument('author_id', type=int, required=True)
         super(RegexAuthorPostsREST, self).__init__()
 
     def get(self):
         args = self.reqparse.parse_args()
         token, limit_by, offset, author_id = args['token'], args['limit_by'], args['offset'], args['author_id']
+        if token not in r:
+            return {'error': 'Not authorized'}, 401
         u = User.query.get_or_404(author_id)
-        posts = u.created_posts
+        posts = islice(map(lambda x: x.to_dict(), u.created_posts), 0 + limit_by * offset, limit_by * offset + limit_by)
+        return list(posts)
 
 
 class RegexPostsREST(Resource):
@@ -140,11 +146,25 @@ class RegexPostsREST(Resource):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('limit_by', required=False, store_missing=True, default=20)
-        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=1)
+        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
         super(RegexPostsREST, self).__init__()
 
     def get(self):
-        pass
+        args = self.reqparse.parse_args()
+        token, limit_by, offset = args['token'], args['limit_by'], args['offset']
+        if token not in r:
+            return {'error': 'Not authorized'}, 401
+        posts = Regex.query.outerjoin(
+            Rating, Regex.id == Rating.regex_id
+        ).add_columns(
+            func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+        ).group_by(
+            Regex.id
+        ).order_by(
+            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+        ).limit(limit_by).offset(0 + limit_by * offset).all()
+        p = map(lambda x: x[0].to_dict(views=x[1], avgmark=float(x[2])), posts)
+        return list(p)
 
 
 class RegexSearchREST(Resource):
@@ -159,7 +179,17 @@ class RegexSearchREST(Resource):
         args = self.reqparse.parse_args()
         token, regex = args['token'], args['regex']
         if token not in r:
-            abort(404)
-        posts = Regex.query.filter(Regex.expression.like(f'{regex}%')).all()
+            return {'error': 'Not authorized'}, 401
+        posts = Regex.query.outerjoin(
+            Rating, Regex.id == Rating.regex_id
+        ).add_columns(
+            func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+        ).filter(
+            Regex.expression.like(f'{regex}%')
+        ).group_by(
+            Regex.id
+        ).order_by(
+            func.count(Regex.id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+        ).all()
 
-        return [post.to_dict() for post in posts]
+        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts]

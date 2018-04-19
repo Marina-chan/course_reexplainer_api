@@ -3,6 +3,7 @@ from flask_restful import Api
 
 from models import db
 from resources.user import UserREST, UserRegisterREST, UserAuthorizationREST, UserTokenAuthorizeREST
+from resources.regex import RegexPostsREST
 from config import config
 
 
@@ -22,6 +23,7 @@ api.add_resource(UserREST, '/users')
 api.add_resource(UserRegisterREST, '/users/register')
 api.add_resource(UserAuthorizationREST, '/users/authorize')
 api.add_resource(UserTokenAuthorizeREST, '/users/refresh_token')
+api.add_resource(RegexPostsREST, '/regex/posts')
 
 
 if __name__ == '__main__':

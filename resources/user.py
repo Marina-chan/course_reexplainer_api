@@ -1,10 +1,10 @@
 import re
-import sqlite3
 from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
 
 import sqlalchemy.exc
+from psycopg2 import IntegrityError
 from flask import abort
 from flask_restful import Resource, reqparse
 
@@ -51,7 +51,7 @@ class UserRegisterREST(Resource):
         try:
             db.session.add(user)
             db.session.commit()
-        except (sqlite3.IntegrityError, sqlalchemy.exc.IntegrityError):
+        except (IntegrityError, sqlalchemy.exc.IntegrityError):
             abort(404)
         return {'user_id': user.id}, 201
 
@@ -70,13 +70,13 @@ class UserAuthorizationREST(Resource):
         username, pwd_hash, salt = args['username'], args['pwd'], args['salt']
         user = User.query.filter_by(username=username).first_or_404()
         for key in r:
-            if r[key] == username:
+            if int(r[key]) == user.id:
                 return {'error': 'User already authorized'}, 403
         pwd = sha512(f'{user.password}:{salt}'.encode()).hexdigest()
         if pwd == pwd_hash:
             token = token_urlsafe(32)
             r[token] = user.id
-            r.expire(token, timedelta(days=3).total_seconds())
+            r.expire(token, int(timedelta(days=3).total_seconds()))
             return {
                 'token': token,
                 'user_id': user.id,
@@ -98,6 +98,6 @@ class UserTokenAuthorizeREST(Resource):
             token = token_urlsafe(32)
             r.pop(args['token'])
             r[token] = user_id
-            r.expire(token, timedelta(days=3).total_seconds())
+            r.expire(token, int(timedelta(days=3).total_seconds()))
             return {'token': token}, 200
         return {'error': 'Not authorized'}, 401

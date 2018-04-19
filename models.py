@@ -12,8 +12,11 @@ class User(db.Model):
     email = db.Column(db.Unicode(140), unique=True, nullable=False)
     password = db.Column(db.Unicode(128), nullable=False)
 
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    def to_dict(self, **kwargs):
+        temp = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        temp.pop('password')
+        temp.update(kwargs)
+        return temp
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -27,8 +30,11 @@ class Regex(db.Model):
     author_id = db.Column(db.ForeignKey(User.id), nullable=False)
     author = db.relationship('User', backref=db.backref('created_posts', lazy=True))
 
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    def to_dict(self, **kwargs):
+        temp = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        temp.update({'date': self.date.strftime('%Y-%m-%d %H:%M:%S')})
+        temp.update(kwargs)
+        return temp
 
     def __repr__(self):
         return f'<Regex {self.id}:{self.author_id}>'
@@ -42,8 +48,10 @@ class Rating(db.Model):
     regex = db.relationship('Regex', backref=db.backref('marks', lazy=True))
     mark = db.Column(db.Integer, default=0)
 
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    def to_dict(self, **kwargs):
+        temp = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        temp.update(kwargs)
+        return temp
 
     def __repr__(self):
         return f'<Ratings {self.id}:{self.mark}>'
