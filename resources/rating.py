@@ -62,14 +62,14 @@ class RatingPostsREST(Resource):
         return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts]
 
 
-class RatingChangeREST(Resource):
+class RatingViewREST(Resource):
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('regex_id', type=int, required=True)
         self.reqparse.add_argument('mark', required=False, store_missing=True, default=0)
-        super(RatingChangeREST, self).__init__()
+        super(RatingViewREST, self).__init__()
 
     def put(self):
         args = self.reqparse.parse_args()
@@ -79,12 +79,14 @@ class RatingChangeREST(Resource):
         user_id = r[token]
         post = Rating.query.filter(Rating.regex_id == regex_id, Rating.user_id == user_id).first()
         if post:
-            post.mark = mark
-            db.session.add(post)
-            db.session.commit()
-            return {'message': {'status': 'Changed'}}, 200
+            if not post.mark:
+                post.mark = mark
+                db.session.add(post)
+                db.session.commit()
+                return {'message': {'status': 'Changed'}}, 200
         else:
             post = Rating(user_id=user_id, regex_id=regex_id, mark=mark)
             db.session.add(post)
             db.session.commit()
             return {'message': {'status': 'Created'}}, 200
+        return {'message': {'status': 'Not modified'}}, 200

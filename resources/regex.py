@@ -34,7 +34,7 @@ class RegexREST(Resource):
         }
 
 
-class RegexChangeREST(Resource):
+class RegexEditREST(Resource):
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
@@ -42,7 +42,7 @@ class RegexChangeREST(Resource):
         self.reqparse.add_argument('expression', required=True)
         self.reqparse.add_argument('regex_id', type=int, required=True)
         self.reqparse.add_argument('user_id', type=int, required=True)
-        super(RegexChangeREST, self).__init__()
+        super(RegexEditREST, self).__init__()
 
     def put(self):
         args = self.reqparse.parse_args()
