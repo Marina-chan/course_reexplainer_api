@@ -1,6 +1,3 @@
-from decimal import Decimal
-from itertools import islice
-
 import sqlalchemy.exc
 from flask import abort
 from psycopg2 import IntegrityError
@@ -26,7 +23,7 @@ class RegexREST(Resource):
         args = self.reqparse.parse_args()
         token, regex_id = args['token'], args['regex_id']
         if token not in r:
-            return {'error': 'Not authorized'}, 401
+            return {'message': {'error': 'Not authorized'}}, 401
         re = Regex.query.get_or_404(regex_id)
         user = User.query.get_or_404(re.author_id)
         return {
@@ -51,15 +48,18 @@ class RegexChangeREST(Resource):
         args = self.reqparse.parse_args()
         token, regex_id, user_id, expression = args['token'], args['regex_id'], args['user_id'], args['expression']
         if token not in r:
-            return {'error': 'Not authorized'}, 401
+            return {'message': {'error': 'Not authorized'}}, 401
         re = Regex.query.get_or_404(regex_id)
         expr_search = Regex.query.filter_by(expression=expression).first()
         if expr_search:
-            u = User.query.get_or_404(expr_search.author_id)
+            abort(303)
         else:
             u = User.query.get_or_404(user_id)
             re.expression = expression
-            re.explanation = ReExplain(expression)()
+            explanation = ReExplain(expression)()
+            if not explanation:
+                abort(403)
+            re.explanation = explanation
             db.session.commit()
         return {
             'id': re.id,
@@ -82,13 +82,13 @@ class RegexDeleteREST(Resource):
         args = self.reqparse.parse_args()
         token, regex_id, author_id = args['token'], args['regex_id'], args['user_id']
         if token not in r:
-            return {'error': 'Not authorized'}, 401
+            return {'message': {'error': 'Not authorized'}}, 401
         re = Regex.query.get_or_404(regex_id)
         if re.author_id != author_id:
             abort(404)
         db.session.delete(re)
         db.session.commit()
-        return {'status': 'ok'}, 200
+        return {'message': {'status': 'ok'}}, 200
 
 
 class RegexCreateREST(Resource):
@@ -106,8 +106,10 @@ class RegexCreateREST(Resource):
         if token not in r:
             return {'error': 'Not authorized'}, 401
         user = User.query.get_or_404(user_id)
-        explanation = ReExplain(expression)
-        re = Regex(expression=expression, author_id=user.id, explanation=explanation())
+        explanation = ReExplain(expression)()
+        if not explanation:
+            abort(403)
+        re = Regex(expression=expression, author_id=user.id, explanation=explanation)
         try:
             db.session.add(re)
             db.session.commit()
@@ -116,7 +118,7 @@ class RegexCreateREST(Resource):
         return {
             'id': re.id,
             'expression': expression,
-            'explanation': explanation()
+            'explanation': re.explanation
         }, 200
 
 
@@ -134,37 +136,22 @@ class RegexAuthorPostsREST(Resource):
         args = self.reqparse.parse_args()
         token, limit_by, offset, author_id = args['token'], args['limit_by'], args['offset'], args['author_id']
         if token not in r:
-            return {'error': 'Not authorized'}, 401
+            return {'message': {'error': 'Not authorized'}}, 401
         u = User.query.get_or_404(author_id)
-        posts = islice(map(lambda x: x.to_dict(), u.created_posts), 0 + limit_by * offset, limit_by * offset + limit_by)
-        return list(posts)
 
-
-class RegexPostsREST(Resource):
-
-    def __init__(self):
-        self.reqparse = reqparse.RequestParser()
-        self.reqparse.add_argument('token', required=True)
-        self.reqparse.add_argument('limit_by', required=False, store_missing=True, default=20)
-        self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
-        super(RegexPostsREST, self).__init__()
-
-    def get(self):
-        args = self.reqparse.parse_args()
-        token, limit_by, offset = args['token'], args['limit_by'], args['offset']
-        if token not in r:
-            return {'error': 'Not authorized'}, 401
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
             func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+        ).filter(
+            Regex.author_id == u.id
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
-        ).limit(limit_by).offset(0 + limit_by * offset).all()
-        p = map(lambda x: x[0].to_dict(views=x[1], avgmark=float(x[2])), posts)
-        return list(p)
+            func.count(Regex.id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+        ).all()
+
+        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts]
 
 
 class RegexSearchREST(Resource):
@@ -179,7 +166,7 @@ class RegexSearchREST(Resource):
         args = self.reqparse.parse_args()
         token, regex = args['token'], args['regex']
         if token not in r:
-            return {'error': 'Not authorized'}, 401
+            return {'message': {'error': 'Not authorized'}}, 401
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(

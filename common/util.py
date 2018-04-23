@@ -1,6 +1,10 @@
 import re
+import sre_constants
+from urllib.parse import quote
 
+import requests
 import redis
+from bs4 import BeautifulSoup
 
 
 class RedisDict:
@@ -16,9 +20,7 @@ class RedisDict:
 
     def __getitem__(self, key):
         k = self.__db.get(key)
-        if k:
-            return k.decode()
-        return k
+        return k.decode() if k else k
 
     def set(self, key, value):
         self.__db.set(key, value)
@@ -28,9 +30,7 @@ class RedisDict:
 
     def __iter__(self):
         for key in self.__db.keys():
-            if key:
-                yield key.decode()
-            yield key
+            yield key.decode() if key else key
 
     def expire(self, key, time):
         self.__db.expire(key, time)
@@ -45,4 +45,30 @@ class ReExplain:
         self.expression = expression
 
     def __call__(self):
-        pass
+        try:
+            re.compile(self.expression)
+        except sre_constants.error:
+            return False
+        r = requests.get(
+            'http://rick.measham.id.au/paste/explain.pl',
+            params={
+                'regex': quote(self.expression)
+            }
+        )
+        b = BeautifulSoup(r.text, 'html.parser')
+        lines = b.pre.text.strip().splitlines()[2:]
+        lines.append('-' * 80)
+        f, t = False, False
+        res = []
+        token, explanation = None, None
+        for line in lines:
+            if line == '-' * 80:
+                f = True
+            if f:
+                res.append((token, explanation))
+                f, t = False, False
+                continue
+            if not t:
+                token, explanation = line.strip().split(maxsplit=1)
+                t = True
+        return '\n'.join(' : '.join(pair) for pair in res)
