@@ -1,10 +1,22 @@
 import re
+import functools
 import sre_constants
 from urllib.parse import quote
 
 import requests
 import redis
 from bs4 import BeautifulSoup
+from flask import request
+
+
+def auth_required(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        token = request.args.get('token')
+        if token is None or token not in RedisDict():
+            return {'message': {'error': 'Not authorized'}}, 401
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class RedisDict:
