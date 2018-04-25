@@ -27,7 +27,7 @@ class UserREST(Resource):
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        token, user_id = args['token'], args['id']
+        user_id = args['id']
         user = User.query.get_or_404(user_id)
         return {'user': user.username}, 200
 

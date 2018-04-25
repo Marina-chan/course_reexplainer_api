@@ -22,7 +22,7 @@ class RegexREST(Resource):
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        token, regex_id = args['token'], args['regex_id']
+        regex_id = args['regex_id']
         re = Regex.query.get_or_404(regex_id)
         user = User.query.get_or_404(re.author_id)
         return {
@@ -46,7 +46,7 @@ class RegexEditREST(Resource):
     @auth_required
     def put(self):
         args = self.reqparse.parse_args()
-        token, regex_id, user_id, expression = args['token'], args['regex_id'], args['user_id'], args['expression']
+        regex_id, user_id, expression = args['regex_id'], args['user_id'], args['expression']
         re = Regex.query.get_or_404(regex_id)
         expr_search = Regex.query.filter_by(expression=expression).first()
         if expr_search:
@@ -79,7 +79,7 @@ class RegexDeleteREST(Resource):
     @auth_required
     def delete(self):
         args = self.reqparse.parse_args()
-        token, regex_id, author_id = args['token'], args['regex_id'], args['user_id']
+        regex_id, author_id = args['regex_id'], args['user_id']
         re = Regex.query.get_or_404(regex_id)
         if re.author_id != author_id:
             abort(404)
@@ -100,7 +100,7 @@ class RegexCreateREST(Resource):
     @auth_required
     def post(self):
         args = self.reqparse.parse_args()
-        token, expression, user_id = args['token'], args['expression'], args['user_id']
+        expression, user_id = args['expression'], args['user_id']
         user = User.query.get_or_404(user_id)
         explanation = ReExplain(expression)()
         if not explanation:
@@ -131,7 +131,7 @@ class RegexAuthorPostsREST(Resource):
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        token, limit_by, offset, author_id = args['token'], args['limit_by'], args['offset'], args['author_id']
+        limit_by, offset, author_id = args['limit_by'], args['offset'], args['author_id']
         u = User.query.get_or_404(author_id)
 
         posts = Regex.query.outerjoin(
@@ -160,7 +160,7 @@ class RegexSearchREST(Resource):
     @auth_required
     def post(self):
         args = self.reqparse.parse_args()
-        token, regex = args['token'], args['regex']
+        regex = args['regex']
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(

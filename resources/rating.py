@@ -19,7 +19,7 @@ class RatingPostREST(Resource):
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        token, regex_id = args['token'], args['regex_id']
+        regex_id = args['regex_id']
         post = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
@@ -46,7 +46,7 @@ class RatingPostsREST(Resource):
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        token, limit_by, offset = args['token'], args['limit_by'], args['offset']
+        limit_by, offset = args['limit_by'], args['offset']
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
