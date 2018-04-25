@@ -32,7 +32,7 @@ class RatingPostREST(Resource):
         ).order_by(
             func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).first()
-        return post[0].to_dict(views=post[1], avgmark=float(post[2]))
+        return post[0].to_dict(views=post[1], avgmark=float(post[2])), 200
 
 
 class RatingPostsREST(Resource):
@@ -59,7 +59,7 @@ class RatingPostsREST(Resource):
             func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).limit(limit_by).offset(0 + limit_by * offset).all()
 
-        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts]
+        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
 
 
 class RatingViewREST(Resource):

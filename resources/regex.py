@@ -31,7 +31,7 @@ class RegexREST(Resource):
             'expression': re.expression,
             'explanation': re.explanation,
             'author': user.username
-        }
+        }, 200
 
 
 class RegexEditREST(Resource):
@@ -151,7 +151,7 @@ class RegexAuthorPostsREST(Resource):
             func.count(Regex.id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).all()
 
-        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts]
+        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
 
 
 class RegexSearchREST(Resource):
@@ -179,4 +179,4 @@ class RegexSearchREST(Resource):
             func.count(Regex.id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).all()
 
-        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts]
+        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200

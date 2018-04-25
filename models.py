@@ -25,7 +25,7 @@ class User(db.Model):
 class Regex(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     expression = db.Column(db.Unicode(255), nullable=False, unique=True)
-    explanation = db.Column(db.Unicode(1020))
+    explanation = db.Column(db.Unicode(2550))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     author_id = db.Column(db.ForeignKey(User.id), nullable=False)
     author = db.relationship('User', backref=db.backref('created_posts', lazy=True))

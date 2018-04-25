@@ -1,6 +1,5 @@
 import re
 import sre_constants
-from urllib.parse import quote
 
 import requests
 import redis
@@ -52,23 +51,29 @@ class ReExplain:
         r = requests.get(
             'http://rick.measham.id.au/paste/explain.pl',
             params={
-                'regex': quote(self.expression)
+                'regex': self.expression
             }
         )
         b = BeautifulSoup(r.text, 'html.parser')
         lines = b.pre.text.strip().splitlines()[2:]
         lines.append('-' * 80)
-        f, t = False, False
         res = []
-        token, explanation = None, None
+        token, explanation = '', ''
         for line in lines:
             if line == '-' * 80:
-                f = True
-            if f:
                 res.append((token, explanation))
-                f, t = False, False
+                token, explanation = '', ''
                 continue
-            if not t:
-                token, explanation = line.strip().split(maxsplit=1)
-                t = True
-        return '\n'.join(' : '.join(pair) for pair in res)
+            line = line.strip()
+            if len(line) >= 80 // 2:
+                regex_part, explanation_part = line.split(maxsplit=1)
+                token = ''.join([token, regex_part])
+                explanation = ''.join([explanation, explanation_part])
+            else:
+                if line.count(' ') == 23:
+                    regex_part, explanation_part = line.split(maxsplit=1)
+                    token = ''.join([token, regex_part])
+                    explanation = ''.join([explanation, explanation_part])
+                else:
+                    explanation = ''.join([explanation, line])
+        return '\n'.join(' : '.join(pair) for pair in res if all(pair))
