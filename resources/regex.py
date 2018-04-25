@@ -5,10 +5,7 @@ from flask_restful import Resource, reqparse
 from sqlalchemy.sql.functions import func
 
 from models import db, User, Regex, Rating
-from common.util import RedisDict, ReExplain, auth_required
-
-
-r = RedisDict()
+from common.util import auth_required, get_re_explanation
 
 
 class RegexREST(Resource):
@@ -54,7 +51,7 @@ class RegexEditREST(Resource):
         else:
             u = User.query.get_or_404(user_id)
             re.expression = expression
-            explanation = ReExplain(expression)()
+            explanation = get_re_explanation(expression)
             if not explanation:
                 abort(403)
             re.explanation = explanation
@@ -102,7 +99,7 @@ class RegexCreateREST(Resource):
         args = self.reqparse.parse_args()
         expression, user_id = args['expression'], args['user_id']
         user = User.query.get_or_404(user_id)
-        explanation = ReExplain(expression)()
+        explanation = get_re_explanation(expression)
         if not explanation:
             abort(403)
         re = Regex(expression=expression, author_id=user.id, explanation=explanation)
@@ -113,7 +110,7 @@ class RegexCreateREST(Resource):
             abort(404)
         return {
             'id': re.id,
-            'expression': expression,
+            'expression': re.expression,
             'explanation': re.explanation
         }, 200
 
@@ -143,7 +140,7 @@ class RegexAuthorPostsREST(Resource):
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Regex.id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.avg(func.coalesce(Rating.mark, 0)).desc(), func.count(Regex.id).desc()
         ).all()
 
         return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
@@ -170,7 +167,7 @@ class RegexSearchREST(Resource):
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Regex.id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.avg(func.coalesce(Rating.mark, 0)).desc(), func.count(Regex.id).desc()
         ).all()
 
         return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200

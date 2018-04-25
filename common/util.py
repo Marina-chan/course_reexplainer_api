@@ -1,9 +1,11 @@
 import re
 import sre_constants
 from functools import wraps
+from html import unescape
 
 import requests
 import redis
+import lxml
 from bs4 import BeautifulSoup
 from flask import request
 
@@ -40,45 +42,40 @@ class RedisDict:
         return self.__db.delete(key)
 
 
-class ReExplain:
-
-    def __init__(self, expression):
-        self.expression = expression
-
-    def __call__(self):
-        try:
-            re.compile(self.expression)
-        except sre_constants.error:
-            return False
-        r = requests.get(
-            'http://rick.measham.id.au/paste/explain.pl',
-            params={
-                'regex': self.expression
-            }
-        )
-        b = BeautifulSoup(r.text, 'html.parser')
-        lines = b.pre.text.strip().splitlines()[2:]
-        lines.append('-' * 80)
-        res = []
-        token, explanation = '', ''
-        for line in lines:
-            if line == '-' * 80:
-                res.append((token, explanation))
-                token, explanation = '', ''
-                continue
-            line = line.strip()
-            if len(line) >= 80 // 2:
+def get_re_explanation(expression):
+    try:
+        re.compile(expression)
+    except sre_constants.error:
+        return False
+    r = requests.get(
+        'http://rick.measham.id.au/paste/explain.pl',
+        params={
+            'regex': expression
+        }
+    )
+    b = BeautifulSoup(r.text, 'lxml')
+    lines = b.pre.text.strip().splitlines()[2:]
+    lines.append('-' * 80)
+    res = []
+    token, explanation = '', ''
+    for line in lines:
+        if line == '-' * 80:
+            res.append((token, explanation))
+            token, explanation = '', ''
+            continue
+        line = line.strip()
+        if len(line) >= 80 // 2:
+            regex_part, explanation_part = line.split(maxsplit=1)
+            token = ''.join([token, regex_part])
+            explanation = ''.join([explanation, explanation_part])
+        else:
+            if line.count(' ') >= 23:
                 regex_part, explanation_part = line.split(maxsplit=1)
                 token = ''.join([token, regex_part])
                 explanation = ''.join([explanation, explanation_part])
             else:
-                if line.count(' ') >= 23:
-                    regex_part, explanation_part = line.split(maxsplit=1)
-                    token = ''.join([token, regex_part])
-                    explanation = ''.join([explanation, explanation_part])
-                else:
-                    explanation = ''.join([explanation, line])
-        return '\n'.join(' : '.join(pair) for pair in res if all(pair))
+                explanation = ''.join([explanation, line])
+    return unescape('\n'.join(' : '.join(pair) for pair in res if all(pair)))
 
 
 def auth_required(method):

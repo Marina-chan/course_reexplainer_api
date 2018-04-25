@@ -29,7 +29,7 @@ class RatingPostREST(Resource):
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.avg(func.coalesce(Rating.mark, 0)).desc(), func.count(Rating.regex_id).desc()
         ).first()
         return post[0].to_dict(views=post[1], avgmark=float(post[2])), 200
 
@@ -54,7 +54,7 @@ class RatingPostsREST(Resource):
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.avg(func.coalesce(Rating.mark, 0)).desc(), func.count(Rating.regex_id).desc()
         ).limit(limit_by).offset(0 + limit_by * offset).all()
 
         return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
@@ -75,15 +75,16 @@ class RatingViewREST(Resource):
         token, regex_id, mark = args['token'], args['regex_id'], args['mark']
         user_id = r[token]
         post = Rating.query.filter(Rating.regex_id == regex_id, Rating.user_id == user_id).first()
-        if post:
-            if not post.mark:
-                post.mark = mark
+        if not user_id == post.author_id:
+            if post:
+                if not post.mark:
+                    post.mark = mark
+                    db.session.add(post)
+                    db.session.commit()
+                    return {'message': {'status': 'Changed'}}, 200
+            else:
+                post = Rating(user_id=user_id, regex_id=regex_id, mark=mark)
                 db.session.add(post)
                 db.session.commit()
-                return {'message': {'status': 'Changed'}}, 200
-        else:
-            post = Rating(user_id=user_id, regex_id=regex_id, mark=mark)
-            db.session.add(post)
-            db.session.commit()
-            return {'message': {'status': 'Created'}}, 200
+                return {'message': {'status': 'Created'}}, 200
         return {'message': {'status': 'Not modified'}}, 200

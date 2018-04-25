@@ -12,6 +12,7 @@ from models import db, User
 from common.util import RedisDict, auth_required
 
 
+TOKEN_TIMEOUT = int(timedelta(days=3).total_seconds())
 r = RedisDict()
 mail_validator = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 
@@ -75,7 +76,7 @@ class UserAuthorizationREST(Resource):
         if pwd == pwd_hash:
             token = token_urlsafe(32)
             r[token] = user.id
-            r.expire(token, int(timedelta(days=3).total_seconds()))
+            r.expire(token, TOKEN_TIMEOUT)
             return {
                 'token': token,
                 'user_id': user.id,
@@ -97,6 +98,6 @@ class UserTokenAuthorizeREST(Resource):
             token = token_urlsafe(32)
             r.pop(args['token'])
             r[token] = user_id
-            r.expire(token, int(timedelta(days=3).total_seconds()))
+            r.expire(token, TOKEN_TIMEOUT)
             return {'token': token}, 200
         return {'message': {'error': 'Not authorized'}}, 401
