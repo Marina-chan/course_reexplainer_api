@@ -72,7 +72,7 @@ class ReExplain:
                 token = ''.join([token, regex_part])
                 explanation = ''.join([explanation, explanation_part])
             else:
-                if line.count(' ') == 23:
+                if line.count(' ') >= 23:
                     regex_part, explanation_part = line.split(maxsplit=1)
                     token = ''.join([token, regex_part])
                     explanation = ''.join([explanation, explanation_part])
