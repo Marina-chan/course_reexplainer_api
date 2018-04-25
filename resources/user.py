@@ -9,7 +9,7 @@ from flask import abort
 from flask_restful import Resource, reqparse
 
 from models import db, User
-from common.util import RedisDict
+from common.util import RedisDict, auth_required
 
 
 r = RedisDict()
@@ -24,11 +24,10 @@ class UserREST(Resource):
         self.reqparse.add_argument('id', type=int, required=True)
         super(UserREST, self).__init__()
 
+    @auth_required
     def get(self):
         args = self.reqparse.parse_args()
         token, user_id = args['token'], args['id']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         user = User.query.get_or_404(user_id)
         return {'user': user.username}, 200
 

@@ -5,7 +5,7 @@ from flask_restful import Resource, reqparse
 from sqlalchemy.sql.functions import func
 
 from models import db, User, Regex, Rating
-from common.util import RedisDict, ReExplain
+from common.util import RedisDict, ReExplain, auth_required
 
 
 r = RedisDict()
@@ -19,11 +19,10 @@ class RegexREST(Resource):
         self.reqparse.add_argument('regex_id', type=int, required=True)
         super(RegexREST, self).__init__()
 
+    @auth_required
     def get(self):
         args = self.reqparse.parse_args()
         token, regex_id = args['token'], args['regex_id']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         re = Regex.query.get_or_404(regex_id)
         user = User.query.get_or_404(re.author_id)
         return {
@@ -44,11 +43,10 @@ class RegexEditREST(Resource):
         self.reqparse.add_argument('user_id', type=int, required=True)
         super(RegexEditREST, self).__init__()
 
+    @auth_required
     def put(self):
         args = self.reqparse.parse_args()
         token, regex_id, user_id, expression = args['token'], args['regex_id'], args['user_id'], args['expression']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         re = Regex.query.get_or_404(regex_id)
         expr_search = Regex.query.filter_by(expression=expression).first()
         if expr_search:
@@ -78,11 +76,10 @@ class RegexDeleteREST(Resource):
         self.reqparse.add_argument('user_id', type=int, required=True)
         super(RegexDeleteREST, self).__init__()
 
+    @auth_required
     def delete(self):
         args = self.reqparse.parse_args()
         token, regex_id, author_id = args['token'], args['regex_id'], args['user_id']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         re = Regex.query.get_or_404(regex_id)
         if re.author_id != author_id:
             abort(404)
@@ -100,11 +97,10 @@ class RegexCreateREST(Resource):
         self.reqparse.add_argument('user_id', type=int, required=True)
         super(RegexCreateREST, self).__init__()
 
+    @auth_required
     def post(self):
         args = self.reqparse.parse_args()
         token, expression, user_id = args['token'], args['expression'], args['user_id']
-        if token not in r:
-            return {'error': 'Not authorized'}, 401
         user = User.query.get_or_404(user_id)
         explanation = ReExplain(expression)()
         if not explanation:
@@ -132,11 +128,10 @@ class RegexAuthorPostsREST(Resource):
         self.reqparse.add_argument('author_id', type=int, required=True)
         super(RegexAuthorPostsREST, self).__init__()
 
+    @auth_required
     def get(self):
         args = self.reqparse.parse_args()
         token, limit_by, offset, author_id = args['token'], args['limit_by'], args['offset'], args['author_id']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         u = User.query.get_or_404(author_id)
 
         posts = Regex.query.outerjoin(
@@ -162,11 +157,10 @@ class RegexSearchREST(Resource):
         self.reqparse.add_argument('regex', required=True)
         super(RegexSearchREST, self).__init__()
 
+    @auth_required
     def post(self):
         args = self.reqparse.parse_args()
         token, regex = args['token'], args['regex']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(

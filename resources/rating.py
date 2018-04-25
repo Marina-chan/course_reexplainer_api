@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse
 from sqlalchemy.sql.functions import func
 
-from common.util import RedisDict
+from common.util import RedisDict, auth_required
 from models import db, Regex, Rating
 
 
@@ -16,11 +16,10 @@ class RatingPostREST(Resource):
         self.reqparse.add_argument('regex_id', type=int, required=True)
         super(RatingPostREST, self).__init__()
 
+    @auth_required
     def get(self):
         args = self.reqparse.parse_args()
         token, regex_id = args['token'], args['regex_id']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         post = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
@@ -44,11 +43,10 @@ class RatingPostsREST(Resource):
         self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
         super(RatingPostsREST, self).__init__()
 
+    @auth_required
     def get(self):
         args = self.reqparse.parse_args()
         token, limit_by, offset = args['token'], args['limit_by'], args['offset']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
@@ -71,11 +69,10 @@ class RatingViewREST(Resource):
         self.reqparse.add_argument('mark', required=False, store_missing=True, default=0)
         super(RatingViewREST, self).__init__()
 
+    @auth_required
     def put(self):
         args = self.reqparse.parse_args()
         token, regex_id, mark = args['token'], args['regex_id'], args['mark']
-        if token not in r:
-            return {'message': {'error': 'Not authorized'}}, 401
         user_id = r[token]
         post = Rating.query.filter(Rating.regex_id == regex_id, Rating.user_id == user_id).first()
         if post:
