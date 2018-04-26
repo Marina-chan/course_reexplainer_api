@@ -44,6 +44,8 @@ class RegexEditREST(Resource):
     def put(self):
         args = self.reqparse.parse_args()
         regex_id, user_id, expression = args['regex_id'], args['user_id'], args['expression']
+        if user_id == 1:
+            abort(403)
         re = Regex.query.get_or_404(regex_id)
         expr_search = Regex.query.filter_by(expression=expression).first()
         if expr_search:
@@ -77,6 +79,8 @@ class RegexDeleteREST(Resource):
     def delete(self):
         args = self.reqparse.parse_args()
         regex_id, author_id = args['regex_id'], args['user_id']
+        if author_id == 1:
+            abort(403)
         re = Regex.query.get_or_404(regex_id)
         if re.author_id != author_id:
             abort(404)
@@ -140,10 +144,10 @@ class RegexAuthorPostsREST(Resource):
         ).group_by(
             Regex.id
         ).order_by(
-            func.avg(func.coalesce(Rating.mark, 0)).desc(), func.count(Regex.id).desc()
+            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).all()
 
-        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
 
 
 class RegexSearchREST(Resource):
@@ -167,7 +171,7 @@ class RegexSearchREST(Resource):
         ).group_by(
             Regex.id
         ).order_by(
-            func.avg(func.coalesce(Rating.mark, 0)).desc(), func.count(Regex.id).desc()
+            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).all()
 
-        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
