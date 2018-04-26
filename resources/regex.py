@@ -11,7 +11,7 @@ from common.util import auth_required, get_re_explanation
 class RegexREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('regex_id', type=int, required=True)
         super(RegexREST, self).__init__()
@@ -33,7 +33,7 @@ class RegexREST(Resource):
 class RegexEditREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('expression', required=True)
         self.reqparse.add_argument('regex_id', type=int, required=True)
@@ -69,7 +69,7 @@ class RegexEditREST(Resource):
 class RegexDeleteREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('regex_id', type=int, required=True)
         self.reqparse.add_argument('user_id', type=int, required=True)
@@ -92,7 +92,7 @@ class RegexDeleteREST(Resource):
 class RegexCreateREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token, which issued after authorization')
         self.reqparse.add_argument('expression', required=True)
         self.reqparse.add_argument('user_id', type=int, required=True)
@@ -122,7 +122,7 @@ class RegexCreateREST(Resource):
 class RegexAuthorPostsREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('limit_by', type=int, required=False, store_missing=True, default=20)
         self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
@@ -153,7 +153,7 @@ class RegexAuthorPostsREST(Resource):
 class RegexSearchREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('regex', required=True)
         super(RegexSearchREST, self).__init__()

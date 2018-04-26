@@ -2,7 +2,7 @@ from flask import Flask
 from flask_restful import Api
 
 from models import db
-from resources.user import UserREST, UserRegisterREST, UserAuthorizationREST, UserTokenAuthorizeREST
+from resources.user import UserREST, UserExitREST, UserRegisterREST, UserAuthorizationREST, UserTokenAuthorizeREST
 from resources.regex import (
     RegexREST, RegexEditREST, RegexCreateREST,
     RegexDeleteREST, RegexSearchREST, RegexAuthorPostsREST)
@@ -23,6 +23,7 @@ api = Api(app)
 
 
 api.add_resource(UserREST, '/users')
+api.add_resource(UserExitREST, '/users/logout')
 api.add_resource(UserRegisterREST, '/users/register')
 api.add_resource(UserAuthorizationREST, '/users/authorize')
 api.add_resource(UserTokenAuthorizeREST, '/users/refresh_token')

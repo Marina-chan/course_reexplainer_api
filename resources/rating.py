@@ -13,7 +13,7 @@ r = RedisDict()
 class RatingPostREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('regex_id', type=int, required=True)
         super(RatingPostREST, self).__init__()
@@ -39,7 +39,7 @@ class RatingPostREST(Resource):
 class RatingPostsREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('limit_by', type=int, required=False, store_missing=True, default=20)
         self.reqparse.add_argument('offset', type=int, required=False, store_missing=True, default=0)
@@ -65,7 +65,7 @@ class RatingPostsREST(Resource):
 class RatingViewREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('regex_id', type=int, required=True)
         self.reqparse.add_argument('mark', required=False, store_missing=True, default=0)
@@ -97,7 +97,7 @@ class RatingViewREST(Resource):
 class RatingHistoryREST(Resource):
 
     def __init__(self):
-        self.reqparse = reqparse.RequestParser()
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True)
         self.reqparse.add_argument('user_id', type=int, required=True)
         super(RatingHistoryREST, self).__init__()

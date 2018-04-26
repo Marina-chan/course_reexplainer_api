@@ -101,3 +101,17 @@ class UserTokenAuthorizeREST(Resource):
             r.expire(token, TOKEN_TIMEOUT)
             return {'token': token}, 200
         return {'message': {'error': 'Not authorized'}}, 401
+
+
+class UserExitREST(Resource):
+
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser(bundle_errors=True)
+        self.reqparse.add_argument('token', required=True)
+
+    @auth_required
+    def post(self):
+        args = self.reqparse.parse_args()
+        token = args['token']
+        r.pop(token)
+        return {'message': {'status': 'Logged out'}}, 200
