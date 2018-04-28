@@ -46,23 +46,27 @@ def get_re_explanation(expression):
     try:
         re.compile(expression)
     except sre_constants.error:
-        return False
-    r = requests.get(
+        return ''
+
+    response = requests.get(
         'http://rick.measham.id.au/paste/explain.pl',
-        params={
-            'regex': expression
-        }
+        params={'regex': expression}
     )
-    b = BeautifulSoup(r.text, 'lxml')
-    lines = b.pre.text.strip().splitlines()[2:]
-    lines.append('-' * 80)
+
+    soup = BeautifulSoup(response.text, 'lxml')
+    lines = soup.pre.text.strip().splitlines()[2:]
+
+    delimiter = '-' * 80
+    lines.append(delimiter)
+
     res = []
     token, explanation = '', ''
     for line in lines:
-        if line == '-' * 80:
+        if line == delimiter:
             res.append((token, explanation))
             token, explanation = '', ''
             continue
+
         line = line.strip()
         if len(line) >= 80 // 2:
             regex_part, explanation_part = line.split(maxsplit=1)
