@@ -5,7 +5,10 @@ from flask_restful import Resource, reqparse
 from sqlalchemy.sql.functions import func
 
 from models import db, User, Regex, Rating
-from common.util import auth_required, get_re_explanation
+from common.util import RedisDict, auth_required, get_re_explanation
+
+
+r = RedisDict()
 
 
 class RegexREST(Resource):
@@ -37,19 +40,21 @@ class RegexEditREST(Resource):
         self.reqparse.add_argument('token', required=True, help='token,which issued after authorization')
         self.reqparse.add_argument('expression', required=True)
         self.reqparse.add_argument('regex_id', type=int, required=True)
-        self.reqparse.add_argument('user_id', type=int, required=True)
         super(RegexEditREST, self).__init__()
 
     @auth_required
     def put(self):
         args = self.reqparse.parse_args()
-        regex_id, user_id, expression = args['regex_id'], args['user_id'], args['expression']
+        token, regex_id, expression = args['token'], args['regex_id'], args['expression']
+        user_id = int(r[token])
         if user_id == 1:
             abort(403)
         re = Regex.query.get_or_404(regex_id)
         expr_search = Regex.query.filter_by(expression=expression).first()
         if expr_search:
-            abort(303)
+            return {'message': {'status': 'Regex already exists'}}, 303
+        elif re.author_id != user_id:
+            abort(403)
         else:
             u = User.query.get_or_404(user_id)
             re.expression = expression
@@ -95,13 +100,13 @@ class RegexCreateREST(Resource):
         self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True, help='token, which issued after authorization')
         self.reqparse.add_argument('expression', required=True)
-        self.reqparse.add_argument('user_id', type=int, required=True)
         super(RegexCreateREST, self).__init__()
 
     @auth_required
     def post(self):
         args = self.reqparse.parse_args()
-        expression, user_id = args['expression'], args['user_id']
+        token, expression = args['token'], args['expression']
+        user_id = int(r[token])
         user = User.query.get_or_404(user_id)
         explanation = get_re_explanation(expression)
         if not explanation:
@@ -132,7 +137,9 @@ class RegexAuthorPostsREST(Resource):
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        limit_by, offset, author_id = args['limit_by'], args['offset'], args['author_id']
+        token, limit_by, offset, author_id = args['token'], args['limit_by'], args['offset'], args['author_id']
+        if int(r[token]) != author_id:
+            abort(403)
         u = User.query.get_or_404(author_id)
 
         posts = Regex.query.outerjoin(

@@ -82,6 +82,7 @@ class UserAuthorizationREST(Resource):
                 'user_id': user.id,
                 'username': user.username
             }, 200
+        return {'message': {'error': 'Password is incorrect'}}, 403
 
 
 class UserTokenAuthorizeREST(Resource):
@@ -108,10 +109,13 @@ class UserExitREST(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True)
+        self.reqparse.add_argument('user_id', type=int, required=True)
 
     @auth_required
     def post(self):
         args = self.reqparse.parse_args()
-        token = args['token']
-        r.pop(token)
-        return {'message': {'status': 'Logged out'}}, 200
+        token, user_id = args['token'], args['user_id']
+        if int(r[token]) == user_id:
+            r.pop(token)
+            return {'message': {'status': 'Logged out'}}, 200
+        return {'message': {'status': 'Token or User is invalid'}}, 400

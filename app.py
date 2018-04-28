@@ -6,7 +6,7 @@ from resources.user import UserREST, UserExitREST, UserRegisterREST, UserAuthori
 from resources.regex import (
     RegexREST, RegexEditREST, RegexCreateREST,
     RegexDeleteREST, RegexSearchREST, RegexAuthorPostsREST)
-from resources.rating import RatingPostREST, RatingPostsREST, RatingViewREST
+from resources.rating import RatingPostREST, RatingPostsREST, RatingViewREST, RatingHistoryREST
 from config import config
 
 
@@ -34,8 +34,9 @@ api.add_resource(RegexSearchREST, '/regex/search')
 api.add_resource(RegexDeleteREST, '/regex/delete')
 api.add_resource(RegexAuthorPostsREST, '/regex/author_posts')
 api.add_resource(RatingPostREST, '/rating')
-api.add_resource(RatingPostsREST, '/rating/posts')
 api.add_resource(RatingViewREST, '/rating/view')
+api.add_resource(RatingPostsREST, '/rating/posts')
+api.add_resource(RatingHistoryREST, '/rating/history')
 
 
 if __name__ == '__main__':

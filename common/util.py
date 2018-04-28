@@ -81,7 +81,12 @@ def get_re_explanation(expression):
 def auth_required(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        token = request.args.get('token')
+        request_json = request.get_json()
+        if request_json:
+            if 'token' in request_json:
+                token = request_json.get('token')
+        else:
+            token = request.args.get('token')
         if token is None or token not in RedisDict():
             return {'message': {'error': 'Not authorized'}}, 401
         return method(self, *args, **kwargs)
