@@ -21,21 +21,27 @@ db.init_app(app)
 
 api = Api(app)
 
+urls = (
+    (UserREST, '/users'),
+    (UserExitREST, '/users/logout'),
+    (UserRegisterREST, '/users/register'),
+    (UserAuthorizationREST, '/users/authorize'),
+    (UserTokenAuthorizeREST, '/users/refresh_token'),
 
-api.add_resource(UserREST, '/users')
-api.add_resource(UserExitREST, '/users/logout')
-api.add_resource(UserRegisterREST, '/users/register')
-api.add_resource(UserAuthorizationREST, '/users/authorize')
-api.add_resource(UserTokenAuthorizeREST, '/users/refresh_token')
-api.add_resource(RegexREST, '/regex')
-api.add_resource(RegexEditREST, '/regex/edit')
-api.add_resource(RegexCreateREST, '/regex/create')
-api.add_resource(RegexSearchREST, '/regex/search')
-api.add_resource(RegexDeleteREST, '/regex/delete')
-api.add_resource(RegexAuthorPostsREST, '/regex/author_posts')
-api.add_resource(RatingPostREST, '/rating')
-api.add_resource(RatingPostsREST, '/rating/posts')
-api.add_resource(RatingViewREST, '/rating/view')
+    (RegexREST, '/regex'),
+    (RegexEditREST, '/regex/edit'),
+    (RegexCreateREST, '/regex/create'),
+    (RegexSearchREST, '/regex/search'),
+    (RegexDeleteREST, '/regex/delete'),
+    (RegexAuthorPostsREST, '/regex/author_posts'),
+
+    (RatingPostREST, '/rating'),
+    (RatingPostsREST, '/rating/posts'),
+    (RatingViewREST, '/rating/view'),
+)
+
+for url in urls:
+    api.add_resource(*url)
 
 
 if __name__ == '__main__':
