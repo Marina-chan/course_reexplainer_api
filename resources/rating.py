@@ -1,6 +1,6 @@
 from flask import abort
 from flask_restful import Resource, reqparse
-from sqlalchemy.sql import column, desc
+from sqlalchemy.sql import desc
 from sqlalchemy.sql.functions import func
 
 from common.util import RedisDict, auth_required
@@ -59,7 +59,7 @@ class RatingPostsREST(Resource):
             func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).limit(limit_by).offset(0 + limit_by * offset).all()
 
-        return [post.to_dict(views=views, avgmark=float(avgmark)) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
 
 
 class RatingViewREST(Resource):
@@ -78,8 +78,9 @@ class RatingViewREST(Resource):
         user_id = int(r[token])
         if user_id == 1:
             abort(403)
+        re = Regex.query.filter(Regex.id == regex_id).first()
         post = Rating.query.filter(Rating.regex_id == regex_id, Rating.user_id == user_id).first()
-        if not user_id == post.author_id:
+        if not user_id == re.author_id:
             if post:
                 if not post.mark:
                     post.mark = mark
@@ -99,13 +100,13 @@ class RatingHistoryREST(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('token', required=True)
-        self.reqparse.add_argument('user_id', type=int, required=True)
         super(RatingHistoryREST, self).__init__()
 
     @auth_required
     def get(self):
         args = self.reqparse.parse_args()
-        user_id = args['user_id']
+        token = args['token']
+        user_id = int(r[token])
         views = func.count(Rating.regex_id).label('views')
         avgmark = func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
         posts = db.session.query(
@@ -131,10 +132,10 @@ class RatingHistoryREST(Resource):
                 'id': regex_id,
                 'expression': regex_expression,
                 'explanation': regex_explanation,
-                'date': regex_date,
+                'date': str(regex_date),
                 'author_id': regex_author_id,
                 'views': regex_views,
-                'avg_mark': regex_avgmark,
+                'avg_mark': float(regex_avgmark),
                 'user_mark': user_mark
             }
             for

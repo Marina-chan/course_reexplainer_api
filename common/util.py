@@ -64,17 +64,17 @@ def get_re_explanation(expression):
             token, explanation = '', ''
             continue
         line = line.strip()
-        if len(line) >= 80 // 2:
+        if len(line) >= 40:
             regex_part, explanation_part = line.split(maxsplit=1)
-            token = ''.join([token, regex_part])
-            explanation = ''.join([explanation, explanation_part])
+            token = ' '.join([token, regex_part])
+            explanation = ' '.join([explanation, explanation_part])
         else:
             if line.count(' ') >= 23:
                 regex_part, explanation_part = line.split(maxsplit=1)
-                token = ''.join([token, regex_part])
-                explanation = ''.join([explanation, explanation_part])
+                token = ' '.join([token, regex_part])
+                explanation = ' '.join([explanation, explanation_part])
             else:
-                explanation = ''.join([explanation, line])
+                explanation = ' '.join([explanation, line])
     return unescape('\n'.join(' : '.join(pair) for pair in res if all(pair)))
 
 
@@ -82,6 +82,7 @@ def auth_required(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         request_json = request.get_json()
+        token = None
         if request_json:
             if 'token' in request_json:
                 token = request_json.get('token')
