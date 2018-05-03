@@ -15,6 +15,7 @@ if __name__ == '__main__':
     if database_exists(DB_URI):
         # sys.exit(0)
         # drop_database(DB_URI)
+        pass
     create_database(DB_URI)
     with app.app_context():
         db.create_all()
