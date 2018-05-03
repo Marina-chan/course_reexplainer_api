@@ -1,6 +1,3 @@
-import os
-from urllib.parse import urlparse
-
 from flask import Flask
 from flask_restful import Api
 
@@ -12,19 +9,8 @@ from resources.regex import (
 from resources.rating import RatingPostREST, RatingPostsREST, RatingViewREST, RatingHistoryREST
 from config import config
 
-if not config.POSTGRES_FULL_URL:
-	DB_URI = f'postgresql+psycopg2://{config.POSTGRES_USER}:{config.POSTGRES_PW}@{config.POSTGRES_URL}/{config.POSTGRES_DB}'
-else:
-	DB_URI = config.POSTGRES_FULL_URL
 
-if os.environ.get('DATABASE_URL', False):
-	url = urlparse(os.environ['DATABASE_URL'])
-	dbname = url.path[1:]
-	user = url.username
-	password = url.password
-	host = url.hostname
-	port = url.port
-	DB_URI = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}'
+DB_URI = f'postgresql+psycopg2://{config.POSTGRES_USER}:{config.POSTGRES_PW}@{config.POSTGRES_URL}/{config.POSTGRES_DB}'
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
