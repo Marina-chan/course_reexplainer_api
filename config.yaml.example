@@ -6,3 +6,4 @@ POSTGRES_URL: "127.0.0.1:5432"
 POSTGRES_USER: "postgres"
 POSTGRES_PW: "root"
 POSTGRES_DB: "re_api"
+POSTGRES_FULL_URL: "" # In case of heroku

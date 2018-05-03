@@ -9,8 +9,10 @@ from resources.regex import (
 from resources.rating import RatingPostREST, RatingPostsREST, RatingViewREST, RatingHistoryREST
 from config import config
 
-
-DB_URI = f'postgresql+psycopg2://{config.POSTGRES_USER}:{config.POSTGRES_PW}@{config.POSTGRES_URL}/{config.POSTGRES_DB}'
+if not config.POSTGRES_FULL_URL:
+	DB_URI = f'postgresql+psycopg2://{config.POSTGRES_USER}:{config.POSTGRES_PW}@{config.POSTGRES_URL}/{config.POSTGRES_DB}'
+else:
+	DB_URI = config.POSTGRES_FULL_URL
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
