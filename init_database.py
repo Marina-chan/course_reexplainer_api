@@ -8,7 +8,8 @@ from models import User, Regex, Rating
 
 
 if __name__ == '__main__':
-    if not os.path.exists('config.yaml') or not os.environ.get('DATABASE_URL', False):
+	print(not os.path.exists('config.yaml') or not os.environ.get('DATABASE_URL', False))
+    if (not os.path.exists('config.yaml')) or (not os.environ.get('DATABASE_URL', False)):
         print('Please create config.yaml from config.yaml.example')
         sys.exit(0)
     print('Database URI: ', DB_URI)
