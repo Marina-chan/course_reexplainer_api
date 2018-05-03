@@ -14,7 +14,7 @@ if __name__ == '__main__':
     print('Database URI: ', DB_URI)
     if database_exists(DB_URI):
         # sys.exit(0)
-        drop_database(DB_URI)
+        # drop_database(DB_URI)
     create_database(DB_URI)
     with app.app_context():
         db.create_all()
