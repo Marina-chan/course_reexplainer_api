@@ -26,9 +26,9 @@ class Regex(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     expression = db.Column(db.Unicode(255), nullable=False, unique=True)
     explanation = db.Column(db.Unicode(2550))
-    date = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.DateTime, default=datetime.now)
     author_id = db.Column(db.ForeignKey(User.id), nullable=False)
-    author = db.relationship('User', backref=db.backref('created_posts', lazy=True))
+    author = db.relationship('User', backref=db.backref('created_posts', cascade='all,delete', lazy=True))
 
     def to_dict(self, **kwargs):
         temp = {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -43,9 +43,9 @@ class Regex(db.Model):
 class Rating(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.ForeignKey(User.id), nullable=False)
-    user = db.relationship('User', backref=db.backref('marked_posts', lazy=True))
+    user = db.relationship('User', backref=db.backref('marked_posts', cascade='all,delete', lazy=True))
     regex_id = db.Column(db.ForeignKey(Regex.id), nullable=False)
-    regex = db.relationship('Regex', backref=db.backref('marks', lazy=True))
+    regex = db.relationship('Regex', backref=db.backref('marks', cascade="all,delete", lazy=True))
     mark = db.Column(db.Integer, default=0)
 
     def to_dict(self, **kwargs):
