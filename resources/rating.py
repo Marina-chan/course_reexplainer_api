@@ -4,7 +4,7 @@ from sqlalchemy.sql import desc
 from sqlalchemy.sql.functions import func
 
 from common.util import RedisDict, auth_required
-from models import db, Regex, Rating
+from models import db, User, Regex, Rating
 
 
 r = RedisDict()
@@ -33,7 +33,9 @@ class RatingPostREST(Resource):
         ).order_by(
             func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
         ).first()
-        return post[0].to_dict(views=post[1], avg_mark=float(post[2])), 200
+        post, views, avg_mark = post[0], post[1], post[2]
+        user = User.query.get_or_404(post.author_id)
+        return post.to_dict(author=user.username, views=views, avg_mark=float(avg_mark)), 200
 
 
 class RatingPostsREST(Resource):
@@ -133,7 +135,6 @@ class RatingHistoryREST(Resource):
                 'expression': regex_expression,
                 'explanation': regex_explanation,
                 'date': str(regex_date),
-                'author_id': regex_author_id,
                 'views': regex_views,
                 'avg_mark': float(regex_avgmark),
                 'user_mark': user_mark
@@ -144,7 +145,7 @@ class RatingHistoryREST(Resource):
             regex_expression,
             regex_explanation,
             regex_date,
-            regex_author_id,
+            _,
             regex_views,
             regex_avgmark
             in user_posts
