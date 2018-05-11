@@ -22,7 +22,7 @@ class RatingPostREST(Resource):
     def get(self):
         args = self.reqparse.parse_args()
         regex_id = args['regex_id']
-        post = Regex.query.join(
+        post = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
             func.count(Rating.regex_id).label('views'), func.avg(Rating.mark).label('avgmark')
