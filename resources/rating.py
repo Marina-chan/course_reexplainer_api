@@ -35,7 +35,7 @@ class RatingPostREST(Resource):
         ).first()
         post, views, avg_mark = post[0], post[1], post[2]
         user = User.query.get_or_404(post.author_id)
-        return post.to_dict(author=user.username, views=views, avg_mark=float(avg_mark)), 200
+        return post.to_dict(author=user.username, views=views, avg_mark=float(avg_mark) if avg_mark else 0), 200
 
 
 class RatingPostsREST(Resource):
@@ -61,7 +61,7 @@ class RatingPostsREST(Resource):
             func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
         ).all()  # .limit(limit_by).offset(0 + limit_by * offset)
 
-        return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark)) if avgmark else post.to_dict(views=views, avg_mark=0) for post, views, avgmark in posts], 200
 
 
 class RatingViewREST(Resource):
@@ -139,7 +139,7 @@ class RatingHistoryREST(Resource):
                 'explanation': regex_explanation,
                 'date': str(regex_date),
                 'views': regex_views,
-                'avg_mark': float(regex_avgmark),
+                'avg_mark': float(regex_avgmark) if regex_avgmark else 0,
                 'user_mark': user_mark
             }
             for

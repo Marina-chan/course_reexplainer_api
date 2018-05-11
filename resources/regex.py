@@ -154,7 +154,7 @@ class RegexAuthorPostsREST(Resource):
             func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
         ).all()
 
-        return [post.to_dict(views=views, avg_mark=float(avgmark), author=u.username) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark), author=u.username) if avgmark else post.to_dict(views=views, avg_mark=0, author=u.username) for post, views, avgmark in posts], 200
 
 
 class RegexSearchREST(Resource):
@@ -181,4 +181,4 @@ class RegexSearchREST(Resource):
             func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
         ).all()
 
-        return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark)) if avgmark else post.to_dict(views=views, avg_mark=0) for post, views, avgmark in posts], 200
