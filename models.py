@@ -46,7 +46,7 @@ class Rating(db.Model):
     user = db.relationship('User', backref=db.backref('marked_posts', cascade='all,delete', lazy=True))
     regex_id = db.Column(db.ForeignKey(Regex.id), nullable=False)
     regex = db.relationship('Regex', backref=db.backref('marks', cascade="all,delete", lazy=True))
-    mark = db.Column(db.Integer, default=0)
+    mark = db.Column(db.Integer, default=db.null)
 
     def to_dict(self, **kwargs):
         temp = {c.name: getattr(self, c.name) for c in self.__table__.columns}

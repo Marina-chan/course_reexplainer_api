@@ -145,16 +145,16 @@ class RegexAuthorPostsREST(Resource):
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
-            func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+            func.count(Rating.regex_id).label('views'), func.avg(Rating.mark).label('avgmark')
         ).filter(
             Regex.author_id == u.id
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
         ).all()
 
-        return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
+        return [post.to_dict(views=views, avg_mark=float(avgmark), author=u.username) for post, views, avgmark in posts], 200
 
 
 class RegexSearchREST(Resource):
@@ -172,13 +172,13 @@ class RegexSearchREST(Resource):
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
-            func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+            func.count(Rating.regex_id).label('views'), func.avg(Rating.mark).label('avgmark')
         ).filter(
             Regex.expression.like(f'{regex}%')
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
         ).all()
 
         return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200

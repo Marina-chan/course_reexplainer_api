@@ -22,16 +22,16 @@ class RatingPostREST(Resource):
     def get(self):
         args = self.reqparse.parse_args()
         regex_id = args['regex_id']
-        post = Regex.query.outerjoin(
+        post = Regex.query.join(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
-            func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+            func.count(Rating.regex_id).label('views'), func.avg(Rating.mark).label('avgmark')
         ).filter(
             Regex.id == regex_id
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
+            func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
         ).first()
         post, views, avg_mark = post[0], post[1], post[2]
         user = User.query.get_or_404(post.author_id)
@@ -54,12 +54,12 @@ class RatingPostsREST(Resource):
         posts = Regex.query.outerjoin(
             Rating, Regex.id == Rating.regex_id
         ).add_columns(
-            func.count(Rating.regex_id).label('views'), func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+            func.count(Rating.regex_id).label('views'), func.avg(Rating.mark).label('avgmark')
         ).group_by(
             Regex.id
         ).order_by(
-            func.count(Rating.regex_id).desc(), func.avg(func.coalesce(Rating.mark, 0)).desc()
-        ).limit(limit_by).offset(0 + limit_by * offset).all()
+            func.count(Rating.regex_id).desc(), func.avg(Rating.mark).desc()
+        ).all()  # .limit(limit_by).offset(0 + limit_by * offset)
 
         return [post.to_dict(views=views, avg_mark=float(avgmark)) for post, views, avgmark in posts], 200
 
@@ -110,7 +110,7 @@ class RatingHistoryREST(Resource):
         token = args['token']
         user_id = int(r[token])
         views = func.count(Rating.regex_id).label('views')
-        avgmark = func.avg(func.coalesce(Rating.mark, 0)).label('avgmark')
+        avgmark = func.avg(Rating.mark).label('avgmark')
         posts = db.session.query(
             Regex, views, avgmark
         ).outerjoin(
