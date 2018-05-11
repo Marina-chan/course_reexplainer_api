@@ -90,7 +90,10 @@ class RatingViewREST(Resource):
                     db.session.commit()
                     return {'message': {'status': 'Changed'}}, 200
             else:
-                post = Rating(user_id=user_id, regex_id=regex_id, mark=mark)
+                if mark:
+                    post = Rating(user_id=user_id, regex_id=regex_id, mark=mark)
+                else:
+                    post = Rating(user_id=user_id, regex_id=regex_id)
                 db.session.add(post)
                 db.session.commit()
                 return {'message': {'status': 'Created'}}, 200
