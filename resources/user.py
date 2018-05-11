@@ -71,7 +71,12 @@ class UserAuthorizationREST(Resource):
         user = User.query.filter_by(username=username).first_or_404()
         for key in r:
             if int(r[key]) == user.id:
-                return {'token': key}, 200
+                return {
+                    'token': key,
+                    'user_id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                }, 200
         pwd = sha512(f'{user.password}:{salt}'.encode()).hexdigest()
         if pwd == pwd_hash:
             token = token_urlsafe(32)
